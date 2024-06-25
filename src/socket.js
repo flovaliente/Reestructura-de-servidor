@@ -1,20 +1,21 @@
 import { Server } from 'socket.io';
-import ProductManagerDB from './dao/ProductManagerDB.js';
-import CartManagerDB from './dao/CartManagerDB.js';
-import UserManagerDB from './dao/UserManagerDB.js';
+
+import ProductRepository from "./dao/repositories/ProductRepository.js";
+import CartRepository from './dao/repositories/CartRepository.js';
+import UserRepository from './dao/repositories/UserRepository.js';
 
 let io;
-const productManager = new ProductManagerDB();
-const cartManager = new CartManagerDB();
-const userManager = new UserManagerDB();
+const productRepository = new ProductRepository();
+const cartRepository = new CartRepository();
+const userRepository = new UserRepository();
 
 export const init = (httpServer) =>{
     io = new Server(httpServer);
     const messages = [];
     io.on('connection', async (socketClient) =>{
         console.log(`Nuevo cliente conectado con id: ${socketClient.id}`);
-        //let carts = await cartManager.getCarts();
-        let products = await productManager.getProducts();
+        //let carts = await cartRepository.getCarts();
+        let products = await productRepository.getProducts();
         //socketClient.emit("carts", carts);
         //console.log(carts.docs);
         //socketClient.emit("products", products.docs);//Envio los productos al cliente para que los muestre actualizados
@@ -34,20 +35,20 @@ export const init = (httpServer) =>{
         
 
         socketClient.on('addProduct', async (newProduct) =>{
-            await productManager.addProduct(newProduct);
-            let products = await productManager.getProducts();
+            await productRepository.addProduct(newProduct);
+            let products = await productRepository.getProducts();
             io.emit('listaProductos', products.docs);
         });
 
         socketClient.on('deleteProductById', async (idDelete) =>{
-            await productManager.deleteProduct(idDelete);
-            let products = await productManager.getProducts();
+            await productRepository.deleteProduct(idDelete);
+            let products = await productRepository.getProducts();
             io.emit('listaProductos', products.docs);
         });
         /*-----------USER---------*/
         socketClient.on('registerForm', async (newUser) =>{
             try {
-                await userManager.registerUser(newUser);
+                await userRepository.registerUser(newUser);
                 socketClient.emit("registrationSuccess", "Registration completed successfully!")
             } catch (error) {
                 socketClient.emit("registratrionError", error.messages);
